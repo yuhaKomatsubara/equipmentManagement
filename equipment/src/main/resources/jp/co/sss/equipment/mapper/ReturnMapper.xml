@@ -40,8 +40,9 @@
 	<update id="stockDataUpdate" parameterType="java.util.List">
 		UPDATE stock_data
 		SET
+		return_date = NOW(),
 		confirmed_date = NOW()
-		WHERE stock_code IN
+		WHERE id IN
 		<foreach item="code" collection="list" open="(" separator=","
 			close=")">
 			#{code}

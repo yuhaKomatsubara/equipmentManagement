@@ -28,7 +28,7 @@ public class ReturnService {
 	/**
 	 * 返却時の処理（貸出可否を１に変更）
 	 */
-	public void returnEquipment(List<String> returnList) {
+	public void returnEquipment(List<Integer> returnList) {
 		//returnMapper.rentFlagUpdate(returnList);
 		returnMapper.stockDataUpdate(returnList);
 	}

@@ -19,5 +19,5 @@ public interface ReturnMapper {
 //	int rentFlagUpdate(List<String> stockCodes);
 	
 	//返却時の更新　stock_data
-	void stockDataUpdate(List<String> stockCodes);
+	void stockDataUpdate(List<Integer> stockCodes);
 }

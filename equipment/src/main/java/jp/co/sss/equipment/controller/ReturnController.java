@@ -46,10 +46,13 @@ public class ReturnController {
 	 */
 	@PostMapping("/returnProcess")
 	public String returnProcess(
-			@RequestParam("returnList") List<String> returnList, //Listにシリアルナンバーが格納されている
+			@RequestParam("equipmentIdList") List<Integer> equipmentIdList,//Listにシリアルナンバーが格納されている
 			@RequestParam("name") String name,
 			Model model) {
-		returnService.returnEquipment(returnList);
+		if(!equipmentIdList.isEmpty()) {
+		returnService.returnEquipment(equipmentIdList);
+		}
+		System.out.println("equipmentIdList = " + equipmentIdList);
 		List<DetailListViewDto> returnViewList = returnService.returnFindView(name); //備品名を取得する　サービス層で処理
 		List<DetailListViewDto> detailName = indexService.detailFind(name);//貸出中の備品を取得する
 		model.addAttribute("detailName", detailName.get(0));//備品名をひとつ取得し、HTMLに表示させる

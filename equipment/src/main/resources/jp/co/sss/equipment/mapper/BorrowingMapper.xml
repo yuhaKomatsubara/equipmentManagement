@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapperインターフェスと修飾名を一致させる -->
+<mapper namespace="jp.co.sss.equipment.mapper.BorrowingMapper">
+	<!-- Mapperのメソッド名と一致させる -->
+	<!-- 前がDBで後ろがDTOでASで紐づかせ安定させる -->
+	<!--貸出画面表示の場合 -->
+	<select id="borrowingFind"
+		resultType="jp.co.sss.equipment.dto.DetailListViewDto">
+		SELECT
+		equipment_name AS equipmentName,
+		parent_stock_code AS
+		parentStockCode,
+		staff_name AS staffName,
+		rent_flg AS rentFlg,
+		start_date AS startDate,
+		limit_date AS limitDate,
+		confirmed_date AS
+		confirmedDate,
+		remarks AS remarks
+		FROM equip_detail_view
+		WHERE
+		equipment_name LIKE CONCAT('%', #{name}, '%')
+		AND rent_flg = '可'
+	</select>
+
+	<!--スタッフ情報の取り出し -->
+	<select id="staffFind"
+		resultType="jp.co.sss.equipment.entity.StaffData">
+		SELECT
+		staff_no AS staffNo,
+		name AS name,
+		auth_no AS authNo,
+		del AS del
+		FROM staff_data
+	</select>
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapperインターフェスと修飾名を一致させる -->
+<mapper namespace="jp.co.sss.equipment.mapper.IndexMapper">
+	<!-- Mapperのメソッド名と一致させる -->
+	<!-- 前がDBで後ろがDTOでASで紐づかせ安定させる -->
+	<select id="findAll"
+		resultType="jp.co.sss.equipment.dto.EquipListViewDto">
+		SELECT
+		name AS name,
+		lendingCount AS lendingCount,
+		stockCount AS stockCount,
+		unknownCount AS unknownCount,
+		total AS total
+		FROM equip_list_view
+		<!-- DBのequip_list_viewを参照する -->
+	</select>
+</mapper>

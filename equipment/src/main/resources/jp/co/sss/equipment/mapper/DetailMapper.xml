@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapperインターフェスと修飾名を一致させる -->
+<mapper namespace="jp.co.sss.equipment.mapper.DetailMapper">
+	<!-- Mapperのメソッド名と一致させる -->
+	<!-- 前がDBで後ろがDTOでASで紐づかせ安定させる -->
+	<select id="detailFind"
+		resultType="jp.co.sss.equipment.dto.DetailListViewDto">
+		SELECT
+		equipment_name AS equipmentName,
+		parent_stock_code AS
+		parentStockCode,
+		staff_name AS staffName,
+		rent_flg AS rentFlg,
+		start_date AS startDate,
+		limit_date AS limitDate,
+		confirmed_date AS
+		confirmedDate,
+		remarks AS remarks,
+		equipment_id AS equipmentId,
+		staff_no AS staffNo
+		FROM equip_detail_view
+		WHERE
+		equipment_name LIKE CONCAT('%', #{name}, '%')
+		<!-- nameはHTMLから検索したい値をmapper経由でxmlに渡して対象を検索する -->
+		<!-- DBのequip_detail_viewを参照する -->
+	</select>
+
+	<!-- 最初は名前だけを取得するために作成したが、controllerの中身を変更しget(0)を使用したため現在は不使用 -->
+	<select id="detailNameFind"
+		resultType="jp.co.sss.equipment.dto.DetailListViewDto">
+		SELECT
+		equipment_name AS equipmentName
+		FROM equip_detail_view
+		WHERE equipment_name LIKE CONCAT('%', #{name}, '%')
+	</select>
+
+<!--返却画面表示の場合  -->
+	<select id="returnFind"
+		resultType="jp.co.sss.equipment.dto.DetailListViewDto">
+		SELECT
+		equipment_name AS equipmentName,
+		parent_stock_code AS parentStockCode,
+		staff_name AS staffName,
+		rent_flg AS rentFlg,
+		start_date AS startDate,
+		limit_date AS limitDate,
+		confirmed_date AS confirmedDate,
+		remarks AS remarks
+		FROM equip_detail_view
+		WHERE equipment_name LIKE CONCAT('%', #{name}, '%')
+		AND rent_flg = '貸出中'
+	</select>
+	
+	<!--貸出画面表示の場合  -->
+	<select id="borrowingFind"
+		resultType="jp.co.sss.equipment.dto.DetailListViewDto">
+		SELECT
+		equipment_name AS equipmentName,
+		parent_stock_code AS parentStockCode,
+		staff_name AS staffName,
+		rent_flg AS rentFlg,
+		start_date AS startDate,
+		limit_date AS limitDate,
+		confirmed_date AS confirmedDate,
+		remarks AS remarks
+		FROM equip_detail_view
+		WHERE equipment_name LIKE CONCAT('%', #{name}, '%')
+		AND rent_flg = '可'
+	</select>
+</mapper>

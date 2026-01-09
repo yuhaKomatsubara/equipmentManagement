@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>備品詳細</title>
+</head>
+
+<body>
+	<a>備品詳細画面</a>
+	<br>
+	<a th:text="${detailName.equipmentName}"></a>
+
+	<table border="1">
+		<tr>
+			<th>シリアルナンバー</th>
+			<th>使用者</th>
+			<th>貸出可否</th>
+			<th>貸出開始日</th>
+			<th>返却予定日</th>
+			<th>最終所在確認日</th>
+			<th>備考</th>
+		</tr>
+		<tr th:each="item : ${itemDetail}">
+			<td th:text="${item.parentStockCode}"></td>
+			<td th:text="${item.staffName}"></td>
+			<td th:text="${item.rentFlg}"></td>
+			<td th:text="${item.startDate}"></td>
+			<td th:text="${item.limitDate}"></td>
+			<td th:text="${item.confirmedDate}"></td>
+			<td th:text="${item.remarks}"></td>
+		</tr>
+	</table>
+	<form th:action="@{/borrowingView}" method="get">
+		    <input type="hidden" name="name"
+		           th:value="${detailName.equipmentName}">
+		    <button type="submit">貸出</button>
+		</form>
+
+	<form th:action="@{/returnView}" method="get">
+	    <input type="hidden" name="name"
+	           th:value="${detailName.equipmentName}">
+	    <button type="submit">返却</button>
+	</form>
+	
+	<form th:action="@{/index}" method="get">
+		<button type="submit">一覧に戻る</button>
+	</form>
+</body>
+
+</html>

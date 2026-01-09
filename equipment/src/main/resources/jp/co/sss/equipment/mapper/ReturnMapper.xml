@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapperインターフェスと修飾名を一致させる -->
+<mapper namespace="jp.co.sss.equipment.mapper.ReturnMapper">
+	<!-- Mapperのメソッド名と一致させる -->
+	<!-- 前がDBで後ろがDTOでASで紐づかせ安定させる -->
+	<!--返却画面表示の場合 -->
+	<select id="returnFind"
+		resultType="jp.co.sss.equipment.dto.DetailListViewDto">
+		SELECT
+		equipment_name AS equipmentName,
+		parent_stock_code AS
+		parentStockCode,
+		staff_name AS staffName,
+		rent_flg AS rentFlg,
+		start_date AS startDate,
+		limit_date AS limitDate,
+		confirmed_date AS
+		confirmedDate,
+		remarks AS remarks,
+		equipment_id AS equipmentId,
+		staff_no AS staffNo
+		FROM equip_detail_view
+		WHERE
+		equipment_name LIKE CONCAT('%', #{name}, '%')
+		AND rent_flg = '貸出中'
+	</select>
+	<!--故障時に使用 -->
+	<update id="rentFlagUpdate" parameterType="java.util.List">
+		UPDATE stock_master
+		SET rent_flg = 1
+		WHERE stock_code IN
+		<foreach item="code" collection="list" open="(" separator=","
+			close=")">
+			#{code}
+		</foreach>
+	</update>
+
+	<update id="stockDataUpdate" parameterType="java.util.List">
+		UPDATE stock_data
+		SET
+		confirmed_date = NOW()
+		WHERE stock_code IN
+		<foreach item="code" collection="list" open="(" separator=","
+			close=")">
+			#{code}
+		</foreach>
+	</update>
+
+
+</mapper>

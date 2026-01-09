@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"> <!--thymeleafの宣言-->
+
+<head>
+	<meta charset="UTF-8">
+	<title>貸出</title>
+</head>
+
+<body>
+	<h>備品貸出画面</h>
+	<br>
+	<a th:text="${detailName.equipmentName}"></a>
+
+	<table border="1" th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
+		<tr>
+			<th>シリアルナンバー</th>
+			<th>使用者</th>
+			<th>貸出開始日</th>
+			<th>返却予定日</th>
+			<th>備考</th>
+			<th>貸出</th>
+		</tr>
+		<tr th:each="item : ${itemDetail}">
+			<td th:text="${item.parentStockCode}"></td>
+			<td>
+			  <select name="staffName">
+			    <option value="">選択してください</option>
+			    <option
+			      th:each="staff : ${staffName}"
+			      th:value="${staff.name}"
+			      th:text="${staff.name}"
+			      th:selected="${staff.name == item.staffName}">
+			    </option>
+			  </select>
+			</td>
+			<td th:text="${item.startDate}"></td>
+			<td th:text="${item.limitDate}"></td>
+			<td th:text="${item.remarks}"></td>
+			<td th:text="${item.rentFlg}"></td>
+		</tr>
+	</table>
+	<!-- 貸出できる備品がないとき -->
+	<p th:if="${itemDetail == null or #lists.isEmpty(itemDetail)}">
+		全て貸出中です
+	</p>
+
+	<form th:action="@{/detailBack}" method="get">
+		<input type="hidden" name="name" th:value="${detailName.equipmentName}">
+		<button type="submit">戻る</button>
+	</form>
+
+</body>
+
+</html>

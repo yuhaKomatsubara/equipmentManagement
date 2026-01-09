@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"> <!--thymeleafの宣言-->
+
+<head>
+	<meta charset="UTF-8">
+	<title>備品一覧</title> <!--タブの部分に表示させるタイトル-->
+
+</head>
+
+<body>
+	<a>備品一覧画面</a>
+	<table border="1">　<!--テーブルの枠を作る-->
+		<tr>
+			<th>名称</th>
+			<th>貸代</th>
+			<th>在庫</th>
+			<th>不明</th>
+			<th>合計</th>
+		</tr>
+		<tr th:each="item : ${items}">
+			　<!--each 繰り返し　コントローラから渡されたDTOのListを繰り返し表示-->
+			<td><!--itemとDTOフィールドを表示-->
+				<!--th:herf→いづれかのアイテムをクリックすると指定されたURLへ遷移する-->
+				<a th:text="${item.name}" th:href="@{/detail(name=${item.name})}"></a>
+			</td>
+			<td th:text="${item.lendingCount}"></td>
+			<td th:text="${item.stockCount}"></td>
+			<td th:text="${item.unknownCount}"></td>
+			<td th:text="${item.total}"></td>
+		</tr>
+	</table>
+</body>
+
+</html>

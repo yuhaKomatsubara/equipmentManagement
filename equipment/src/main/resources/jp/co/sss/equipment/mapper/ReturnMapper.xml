@@ -20,17 +20,21 @@
 		confirmedDate,
 		remarks AS remarks,
 		equipment_id AS equipmentId,
-		staff_no AS staffNo
+		staff_no
+		AS staffNo
 		FROM equip_detail_view
 		WHERE
-		equipment_name LIKE CONCAT('%', #{name}, '%')
+		equipment_name LIKE CONCAT('%',
+		#{name}, '%')
 		AND rent_flg = '貸出中'
 	</select>
+	
 	<!--故障時に使用 -->
 	<update id="rentFlagUpdate" parameterType="java.util.List">
 		UPDATE stock_master
 		SET rent_flg = 1
 		WHERE stock_code IN
+		<!-- Listに入っている数だけ繰り返し更新 -->
 		<foreach item="code" collection="list" open="(" separator=","
 			close=")">
 			#{code}
@@ -42,12 +46,37 @@
 		SET
 		return_date = NOW(),
 		confirmed_date = NOW()
-		WHERE id IN
+		WHERE id
+		IN
+		<!-- Listに入っている数だけ繰り返し更新 -->
 		<foreach item="code" collection="list" open="(" separator=","
 			close=")">
 			#{code}
 		</foreach>
 	</update>
 
+	<insert id="insertRebornStock" parameterType="int">
+		INSERT INTO stock_data (
+		stock_code,
+		parent_stock_code,
+		staff_no,
+		start_date,
+		limit_date,
+		return_date,
+		confirmed_date,
+		del
+		)
+		SELECT
+		stock_code,
+		stock_code,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NOW(),
+		0
+		FROM stock_data
+		WHERE id = #{id}
+	</insert>
 
 </mapper>

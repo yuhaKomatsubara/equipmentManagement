@@ -36,4 +36,19 @@
 		FROM staff_data
 	</select>
 
+	<!-- 貸出時に変更するデータ　可から貸出中に -->
+	<update id="updateCheckedOut" parameterType="java.util.List">
+		UPDATE stock_data
+		SET
+		staff_no = ,
+		start_date = ,
+		limit_date = ,
+		confirmed_date = NOW()
+		<!-- Listに入っている数だけ繰り返し更新 -->
+		<foreach item="code" collection="list" open="(" separator=","
+			close=")">
+			#{code}
+		</foreach>
+	</update>
+
 </mapper>

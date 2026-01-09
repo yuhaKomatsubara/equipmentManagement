@@ -10,35 +10,41 @@
 	<h>備品貸出画面</h>
 	<br>
 	<a th:text="${detailName.equipmentName}"></a>
-
-	<table border="1" th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
-		<tr>
-			<th>シリアルナンバー</th>
-			<th>使用者</th>
-			<th>貸出開始日</th>
-			<th>返却予定日</th>
-			<th>備考</th>
-			<th>貸出</th>
-		</tr>
-		<tr th:each="item : ${itemDetail}">
-			<td th:text="${item.parentStockCode}"></td>
-			<td>
-			  <select name="staffName">
-			    <option value="">選択してください</option>
-			    <option
-			      th:each="staff : ${staffName}"
-			      th:value="${staff.name}"
-			      th:text="${staff.name}"
-			      th:selected="${staff.name == item.staffName}">
-			    </option>
-			  </select>
-			</td>
-			<td th:text="${item.startDate}"></td>
-			<td th:text="${item.limitDate}"></td>
-			<td th:text="${item.remarks}"></td>
-			<td th:text="${item.rentFlg}"></td>
-		</tr>
-	</table>
+	<form th:action="@{/borrowingProcess}" method="post" th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
+		<input type="hidden" name="name" th:value="${detailName.equipmentName}">
+		<table border="1">
+			<tr>
+				<th>シリアルナンバー</th>
+				<th>使用者</th>
+				<th>貸出開始日</th>
+				<th>返却予定日</th>
+				<th>備考</th>
+				<th>貸出</th>
+			</tr>
+			<tr th:each="item : ${itemDetail}">
+				<td th:text="${item.parentStockCode}"></td>
+				<td>
+					<select name="staffName">
+						<option value="">選択してください</option>
+						<option th:each="staff : ${staffName}" th:value="${staff.name}" th:text="${staff.name}"
+							th:selected="${staff.name == item.staffName}">
+						</option>
+					</select>
+				</td>
+				<td th:text="${item.startDate}"></td>
+				<td>
+					<input type="date" name="limitDateMap[__${item.equipmentId}__]" th:value="${item.limitDate}">
+				</td>
+				<td th:text="${item.remarks}"></td>
+				<td>
+					<!--/* チェックボックスにシーケンスidを反映させる
+											**チェックした分だけコントローラに渡す */-->
+					<input type="checkbox" name="equipmentIdList" th:value="${item.equipmentId}">
+				</td>
+			</tr>
+		</table>
+		<button type="submit">貸出</button>
+	</form>
 	<!-- 貸出できる備品がないとき -->
 	<p th:if="${itemDetail == null or #lists.isEmpty(itemDetail)}">
 		全て貸出中です

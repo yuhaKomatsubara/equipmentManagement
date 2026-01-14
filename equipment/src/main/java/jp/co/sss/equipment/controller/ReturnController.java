@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jp.co.sss.equipment.dto.DetailListViewDto;
 import jp.co.sss.equipment.service.IndexService;
@@ -65,16 +66,16 @@ public class ReturnController {
 	@PostMapping("/returnProcess")
 	public String returnProcess(
 			@RequestParam(value = "equipmentIdList", required = false) List<Integer> equipmentIdList, //Listにidが格納されている
-			@RequestParam("name") String name,
-			Model model) {
+			@RequestParam(value = "name", required = false) String name,
+			RedirectAttributes redirectAttributes) {
 		if (equipmentIdList != null && !equipmentIdList.isEmpty()) { //チェックが入っている場合
 			returnService.returnEquipment(equipmentIdList); //サービス層でsqlのマッパー呼び出し
 		}
-		System.out.println("equipmentIdList = " + equipmentIdList);
-		List<DetailListViewDto> returnViewList = returnService.returnFindView(name); //備品名を取得する　サービス層で処理
-		List<DetailListViewDto> detailName = indexService.detailFind(name);//貸出中の備品を取得する
-		model.addAttribute("detailName", detailName.get(0));//備品名をひとつ取得し、HTMLに表示させる
-		model.addAttribute("itemDetail", returnViewList);//貸出中の備品をHTMLのテーブルに表示させる
-		return "return/returnView";
+		List<DetailListViewDto> detailNameList = indexService.detailFind(name);
+		if (!detailNameList.isEmpty()) { //備品名の取得
+			redirectAttributes.addFlashAttribute("detailName", detailNameList.get(0));
+		}
+		redirectAttributes.addAttribute("name", name);
+	    return "redirect:/returnView";
 	}
 }

@@ -20,7 +20,7 @@ public interface BorrowingMapper {
 		//貸出画面に表示させる使用者の取得
 		List<StaffData> staffFind();
 		
-		void borrowingUpdate(
+		void borrowingUpdate( //サービスから渡された値をxmlに渡す サービス層で一軒ずつ回している
 				@Param("id") Integer id,
 				@Param("staffNo") Integer staffNo,
 				@Param("startDate") LocalDate startDate,

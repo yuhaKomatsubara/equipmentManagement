@@ -1,7 +1,7 @@
 package jp.co.sss.equipment.controller;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,53 +36,26 @@ public class BorrowingController {
 	 * @param name
 	 * @return　templates/index/returnView 貸出画面
 	 */
-	//	@GetMapping("/borrowingView")
-	//	public String borrowingView(Model model, String name) {
-	//		List<DetailListViewDto> borrowingList = borrowingService.borrowingFindView(name); //備品名を取得する　サービス層で処理
-	//		List<DetailListViewDto> detailName = indexService.detailFind(name);//貸出中の備品を取得する
-	//		List<StaffData> staffList = borrowingService.staffDataFind(); //スタッフ情報を取得する
-	//		//model.addAttribute("detailName", detailName.get(0)); //備品名をひとつ取得し、HTMLに表示させる
-	//		if (!detailName.isEmpty()) {
-	//		    model.addAttribute("detailName", detailName.get(0));
-	//		} else {
-	//		    model.addAttribute("detailName", null); // または空オブジェクトを作る
-	//		}
-	//		model.addAttribute("itemDetail", borrowingList);//貸出中の備品をHTMLのテーブルに表示させる
-	//		model.addAttribute("staffName", staffList);//スタッフ情報をhtmlのドロップダウンに表示させる
-	//
-	//		//日付を渡す 文字列として渡す
-	//		model.addAttribute("today", DateUtil.getToday().toString());
-	//		model.addAttribute("defaultLimit", DateUtil.getDefaultLimitDate().toString());
-	//		return "borrowing/borrowingView";//templatesフォルダーのhtmlを表示させる
-	//	}
-
 	@GetMapping("/borrowingView")
 	public String borrowingView(Model model, String name) {
 		List<DetailListViewDto> detailNameList = indexService.detailFind(name);
-
-		DetailListViewDto detailName = null;
-		if (!detailNameList.isEmpty()) {
-			detailName = detailNameList.get(0);
-		} else {
-			detailName = new DetailListViewDto(); // 空のオブジェクト作っとく
-			detailName.setEquipmentName(""); // null より "" が安全
-		}
-		model.addAttribute("detailName", detailName);
+		DetailListViewDto detailName = detailNameList.get(0);;  //備品名の取得
+		model.addAttribute("detailName", detailName); //画面に渡す
 
 		List<DetailListViewDto> borrowingList = borrowingService.borrowingFindView(name);
 		List<StaffData> staffList = borrowingService.staffDataFind();
 
-		model.addAttribute("itemDetail", borrowingList);
-		model.addAttribute("staffName", staffList);
-		model.addAttribute("today", DateUtil.getToday().toString());
-		model.addAttribute("defaultLimit", DateUtil.getDefaultLimitDate().toString());
+		model.addAttribute("itemDetail", borrowingList); //貸出リストの取得
+		model.addAttribute("staffName", staffList); //使用者名の取得
+		model.addAttribute("today", DateUtil.getToday().toString()); //今日の日付
+		model.addAttribute("defaultLimit", DateUtil.getDefaultLimitDate().toString()); //デフォルト返却予定日
 
 		//シーケンスidが取得できていない
 		//デバッグ
 		int num = 0;
 		for (DetailListViewDto i : detailNameList) {
 			num++;
-			System.out.println("===========" + num + "===========");
+			System.out.println("===========" + num + "===========");	
 			System.out.println("===========" + "貸出" + "===========");
 			System.out.println("備品名:" + i.getEquipmentName());
 			System.out.println("シリアル:" + i.getParentStockCode());
@@ -107,29 +80,31 @@ public class BorrowingController {
 	 */
 	@PostMapping("/borrowingProcess")
 	public String borrowingProcess(
+			//「value」HTTPリクエストパラメータequipmentIdListをメソッドの引数に入れる  リクエストパラメータの名前
+			//「required = false」リクエストパラメータが必須ではないことを示す
 			@RequestParam(value = "equipmentIdList", required = false) List<Integer> equipmentIdList,
-			@RequestParam Map<String, String> staffNoMap,
-			@RequestParam Map<String, String> startDateMap,
-			@RequestParam Map<String, String> limitDateMap,
+			@RequestParam List<Integer> staffNoList, //使用者リスト
+			@RequestParam List<LocalDate> startDateList, //貸出開始日リスト
+			@RequestParam List<LocalDate> limitDateList, //返却予定日リスト
 			@RequestParam(value = "name", required = false) String name,
 			RedirectAttributes redirectAttributes) {
 
-		System.out.println("=== borrowingProcess called ===");
-		System.out.println("equipmentIdList: " + equipmentIdList);
-		System.out.println("staffNoMap: " + staffNoMap);
-		System.out.println("startDateMap: " + startDateMap);
-		System.out.println("limitDateMap: " + limitDateMap);
-		System.out.println("name: " + name);
+		if (equipmentIdList != null && !equipmentIdList.isEmpty()
+			    && staffNoList != null && !staffNoList.isEmpty()
+			    && startDateList != null && !startDateList.isEmpty()
+			    && limitDateList != null && !limitDateList.isEmpty()) {  //全て入力されている場合のみ次の処理へ
 
-		if (equipmentIdList != null && !equipmentIdList.isEmpty()) {
-			// Service に Map も含めてまとめて渡す
-			borrowingService.borrowingEquipment(equipmentIdList, staffNoMap, startDateMap, limitDateMap);
-		}
+			    borrowingService.borrowingEquipment(
+			        equipmentIdList,
+			        staffNoList,
+			        startDateList,
+			        limitDateList);
+			}
 		List<DetailListViewDto> detailNameList = indexService.detailFind(name);
-		if (!detailNameList.isEmpty()) {
+		if (!detailNameList.isEmpty()) { //備品名の取得
 			redirectAttributes.addFlashAttribute("detailName", detailNameList.get(0));
 		}
-		redirectAttributes.addFlashAttribute("name", name);
-		return "redirect:/borrowingView";
+		redirectAttributes.addAttribute("name", name);
+	    return "redirect:/borrowingView";
 	}
 }

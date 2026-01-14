@@ -29,8 +29,8 @@ public class DetailListViewDto {
 	private String remarks;
 	
 	/**シーケンスid*/
-	private String equipmentId;
+	private Integer equipmentId;
 	
 	/**スタッフid*/
-	private String staffNo;
+	private Integer staffNo;
 }

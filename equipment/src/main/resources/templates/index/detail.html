@@ -3,16 +3,17 @@
 
 <head>
 	<meta charset="UTF-8">
+	<link rel="stylesheet" th:href="@{/css/layout.css}">
 	<title>備品詳細</title>
 </head>
 
-<body>
-	<a>備品詳細画面</a>
+<body class="body">
+	<a class="title">備品詳細画面</a>
 	<br>
 	<a th:text="${detailName.equipmentName}"></a>
 
 	<table border="1">
-		<tr>
+		<tr class="front_label_color">
 			<th>シリアルナンバー</th>
 			<th>使用者</th>
 			<th>貸出可否</th>

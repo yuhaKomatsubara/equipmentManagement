@@ -17,7 +17,8 @@
 	<div class="table-wrapper">
 
 		<!-- 貸出用フォーム（テーブル内の入力を送信） -->
-		<form id="borrowForm" th:action="@{/borrowingProcess}" method="post" th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
+		<form id="borrowForm" th:action="@{/borrowingProcess}" method="post"
+			th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
 			<input type="hidden" name="name" th:value="${detailName.equipmentName}">
 			<table border="1">
 				<tr class="front_label_color">
@@ -33,7 +34,9 @@
 					<td th:text="${item.parentStockCode}"></td>
 
 					<td>
-						<select name="staffNoList">
+
+						<!--<select name="staffNoList">（List使用時）-->
+						<select th:name="|staffNoMap[${item.equipmentId}]|">
 							<option value="">選択してください</option>
 							<option th:each="staff : ${staffName}" th:value="${staff.staffNo}" th:text="${staff.name}"
 								th:selected="${staffNoList != null and staffNoList[stat.index] == staff.staffNo}">
@@ -42,13 +45,15 @@
 					</td>
 
 					<td>
-						<input type="date" name="startDateList"
-							th:value="${startDateList != null ? startDateList[stat.index] : today}">
+						<!--(List使用時)<input type="date" name="startDateList"
+							th:value="${startDateList != null ? startDateList[stat.index] : today}">-->
+						<input type="date" th:name="|startDateMap[${item.equipmentId}]|" th:value="${today}">
 					</td>
 
 					<td>
-						<input type="date" name="limitDateList"
-							th:value="${limitDateList != null ? limitDateList[stat.index] : defaultLimit}">
+						<!--(List使用時)<input type="date" name="limitDateList"
+							th:value="${limitDateList != null ? limitDateList[stat.index] : defaultLimit}">-->
+						<input type="date" th:name="|limitDateMap[${item.equipmentId}]|" th:value="${defaultLimit}">
 					</td>
 
 					<td th:text="${item.remarks}"></td>

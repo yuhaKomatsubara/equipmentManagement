@@ -13,43 +13,70 @@
 	<!--/* 備品の名前を表示させる */-->
 	<a th:text="${detailName.equipmentName}"></a>
 	<div class="fc_red" th:text="${errorMessage}"></div>
+	<p th:if="${updateMessage}" th:text="${updateMessage}"></p>
 	<!--/* ボタンを押下した時にコントローラの/returnProcessが呼び出し */-->
 	<!--/* th:ifでデータが存在しない場合テーブルと返却ボタンが表示されないようにする */-->
-	<form th:action="@{/returnProcess}" method="post" th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
-		<input type="hidden" name="name" th:value="${detailName.equipmentName}">
-		<table border="1">
-			<tr class="front_label_color">
-				<th>シリアルナンバー</th>
-				<th>使用者</th>
-				<th>貸出開始日</th>
-				<th>返却予定日</th>
-				<th>備考</th>
-				<th>返却</th>
-			</tr>
-			<tr th:each="item : ${itemDetail}">
-				<td th:text="${item.parentStockCode}"></td>
-				<td th:text="${item.staffName}"></td>
-				<td th:text="${item.startDate}"></td>
-				<td th:text="${item.limitDate}"></td>
-				<td th:text="${item.remarks}"></td>
-				<td>
-					<!--/* チェックボックスにシーケンスidを反映させる
-						**チェックした分だけコントローラに渡す */-->
-					<input type="checkbox" name="equipmentIdList" th:value="${item.equipmentId}">
-				</td>
-			</tr>
-		</table>
-		<button type="submit">返却</button>
-	</form>
-	<!-- 貸出中の備品がないとき -->
-	<p th:if="${itemDetail == null or #lists.isEmpty(itemDetail)}">
-		貸出中の備品はありません
-	</p>
+	<div class="table-wrapper">
 
-	<form th:action="@{/detailBack}" method="get">
-		<input type="hidden" name="name" th:value="${detailName.equipmentName}">
-		<button type="submit">戻る</button>
-	</form>
+	  <!-- 返却用フォーム -->
+	  <form id="returnForm"
+	        th:action="@{/returnProcess}"
+	        method="post"
+	        th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">
+
+	    <input type="hidden" name="name" th:value="${detailName.equipmentName}">
+
+	    <table border="1" class="borrow-table">
+	      <colgroup>
+	        <col class="col-serial">
+	        <col class="col-user">
+	        <col class="col-start">
+	        <col class="col-limit">
+	        <col class="col-remarks">
+	        <col class="col-check">
+	      </colgroup>
+
+	      <tr class="front_label_color">
+	        <th>シリアルナンバー</th>
+	        <th>使用者</th>
+	        <th>貸出開始日</th>
+	        <th>返却予定日</th>
+	        <th>備考</th>
+	        <th>返却</th>
+	      </tr>
+
+	      <tr th:each="item : ${itemDetail}">
+			<td class="col-serial" th:text="${item.parentStockCode}"></td>
+			<td class="col-user"   th:text="${item.staffName}"></td>
+			<td class="col-start"  th:text="${item.startDate}"></td>
+			<td class="col-limit"  th:text="${item.limitDate}"></td>
+			<td class="col-remarks" th:text="${item.remarks}"></td>
+			<td class="col-check">
+			  <input type="checkbox"
+			         name="equipmentIdList"
+			         th:value="${item.equipmentId}">
+			</td>
+	      </tr>
+	    </table>
+	  </form>
+
+	  <!-- 戻る用フォーム -->
+	  <form id="backForm" th:action="@{/detailBack}" method="get">
+	    <input type="hidden" name="name" th:value="${detailName.equipmentName}">
+	  </form>
+
+	  <!-- ボタン配置（貸出画面と同じ） -->
+	  <div class="table-buttons">
+	    <button  class="returnButton" type="submit" form="returnForm" th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">返却</button>
+	    <button class="returnToTopButton" type="submit" form="backForm">戻る</button>
+	  </div>
+
+	  <!-- 貸出中の備品がないとき -->
+	  <p th:if="${itemDetail == null or #lists.isEmpty(itemDetail)}">
+	    貸出中の備品はありません
+	  </p>
+
+	</div>
 </body>
 
 </html>

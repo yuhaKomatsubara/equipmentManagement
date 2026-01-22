@@ -1,7 +1,5 @@
 package jp.co.sss.equipment.controller;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -52,25 +50,6 @@ public class BorrowingController {
 		model.addAttribute("staffName", staffList); //使用者名の取得
 		model.addAttribute("today", DateUtil.getToday().toString()); //今日の日付
 		model.addAttribute("defaultLimit", DateUtil.getDefaultLimitDate().toString()); //デフォルト返却予定日
-
-		//シーケンスidが取得できていない
-		//デバッグ
-		//		int num = 0;
-		//		for (DetailListViewDto i : detailNameList) {
-		//			num++;
-		//			System.out.println("===========" + num + "===========");
-		//			System.out.println("===========" + "貸出" + "===========");
-		//			System.out.println("備品名:" + i.getEquipmentName());
-		//			System.out.println("シリアル:" + i.getParentStockCode());
-		//			System.out.println("使用者:" + i.getStaffName());
-		//			System.out.println("貸出可否:" + i.getRentFlg());
-		//			System.out.println("貸出開始日:" + i.getStartDate());
-		//			System.out.println("返却予定日:" + i.getLimitDate());
-		//			System.out.println("最終所在確認" + i.getConfirmedDate());
-		//			System.out.println("備考:" + i.getRemarks());
-		//			System.out.println("シーケンスID: " + i.getEquipmentId());
-		//			System.out.println("スタッフID:" + i.getStaffNo());
-		//		}
 		return "borrowing/borrowingView";
 	}
 
@@ -81,8 +60,6 @@ public class BorrowingController {
 	 * @param model
 	 * @return
 	 */
-	//ListからMapに変更
-	//エラーあり01.02に未入力があると03のデータが合っていても処理されない
 	@PostMapping("/borrowingProcess")
 	public String borrowingProcess(
 			@RequestParam(value = "equipmentIdList", required = false) List<Integer> equipmentIdList,
@@ -92,82 +69,37 @@ public class BorrowingController {
 			@RequestParam Map<String, String> limitDateMap,
 			@RequestParam String name,
 			RedirectAttributes redirectAttributes) {
-		
-		  List<String> errorMessages = new ArrayList<>();
 
-		    if (equipmentIdList == null || equipmentIdList.isEmpty()) {
-		        errorMessages.add("貸出対象が選択されていません");
-		    }
+		//サービス層で入力チェック(入力メッセージをリストで受け取る)
+		List<String> errorMessages = borrowingService.validateBorrowing(
+				equipmentIdList,
+				serialMap,
+				staffNoMap,
+				startDateMap,
+				limitDateMap);
 
-		    if (!errorMessages.isEmpty()) {
-		        redirectAttributes.addFlashAttribute("errorMessages", errorMessages);
-		        redirectAttributes.addAttribute("name", name);
-		        return "redirect:/borrowingView";
-		    }
+		//エラーメッセージがある場合、リダイレクトしてメッセージを表示
+		if (!errorMessages.isEmpty()) {
+			redirectAttributes.addFlashAttribute("errorMessages", errorMessages);
+			redirectAttributes.addAttribute("name", name);
+			return "redirect:/borrowingView";
+		}
 
-		    
-		    for (Integer id : equipmentIdList) {
-		        List<String> rowErrors = new ArrayList<>();
-		        String serial = serialMap.get("serialMap[" + id + "]");
-		        String staffStr = staffNoMap.get("staffNoMap[" + id + "]");
-		        String startStr = startDateMap.get("startDateMap[" + id + "]");
-		        String limitStr = limitDateMap.get("limitDateMap[" + id + "]");
-
-		        if (staffStr == null || staffStr.isBlank()) {
-		            rowErrors.add("使用者未選択");
-		        }
-		        if (startStr == null || startStr.isBlank()) {
-		            rowErrors.add("貸出開始日未入力");
-		        }
-		        if (limitStr == null || limitStr.isBlank()) {
-		            rowErrors.add("返却予定日未入力");
-		        }
-
-		        if (startStr != null && !startStr.isBlank()
-		        		 && limitStr != null && !limitStr.isBlank()) {
-
-		        		    LocalDate today = DateUtil.getToday();
-		        		    LocalDate startDate = LocalDate.parse(startStr);
-		        		    LocalDate limitDate = LocalDate.parse(limitStr);
-
-		        		    // 貸出開始日が今日より前
-//		        		    if (today.isAfter(startDate)) {
-//		        		        rowErrors.add("貸出開始日が本日より前です");
-//		        		    }
-
-		        		 // 返却予定日が今日より前
-		        		    if (limitDate.isBefore(today)) {
-		        		        rowErrors.add("返却予定日が本日より前です");
-		        		    }
-		        		    // 返却予定日が貸出開始日より前
-		        		    else if (limitDate.isBefore(startDate)) {
-		        		        rowErrors.add("返却予定日が貸出開始日より前です");
-		        		    }
-		        		}
-
-		        // このIDにエラーが1つでもあればまとめて追加
-		        if (!rowErrors.isEmpty()) {
-		        	errorMessages.add("【シリアル：" + serial + "】");
-		            for (String msg : rowErrors) {
-		                errorMessages.add(msg);
-		            }
-		        }
-		    }
-
-		    // エラーが1件でもあれば戻す
-		    if (!errorMessages.isEmpty()) {
-		        redirectAttributes.addFlashAttribute("errorMessages", errorMessages);
-		        redirectAttributes.addAttribute("name", name);
-		        return "redirect:/borrowingView";
-		    }
-		borrowingService.borrowingEquipment(
-		        equipmentIdList,
-		        staffNoMap,
-		        startDateMap,
-		        limitDateMap);
-
-		System.out.println("備品名 : " + name);
-		System.out.println("===== END =====");
+		//貸出更新処理
+		try {
+			borrowingService.borrowingEquipment(
+					equipmentIdList,
+					staffNoMap,
+					startDateMap,
+					limitDateMap);
+			redirectAttributes.addFlashAttribute("updateMessage", "貸出処理が完了しました。");
+			
+			//貸出不可の場合の例外処理
+		} catch (IllegalStateException e) {
+			redirectAttributes.addFlashAttribute("errorMessages", List.of("他のブラウザで更新されました。貸出処理は行えませんでした。"));
+			redirectAttributes.addAttribute("name", name);
+			return "redirect:/borrowingView";
+		}
 
 		redirectAttributes.addAttribute("name", name);
 		return "redirect:/borrowingView";

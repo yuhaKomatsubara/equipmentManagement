@@ -12,6 +12,7 @@
 	<br>
 	<h2 th:text="${detailName.equipmentName}"></h2>
 
+	<!-- エラーメッセージヘッダー表示 -->
 	<div th:if="${errorMessages != null and errorMessages.size() > 0}">
 		<h4 class="fc_red">以下のエラーが発生しました。</h4>
 		<h4 class="fc_red">更新できませんでした。再度入力してください。</h4>
@@ -56,19 +57,26 @@
 					</tr>
 
 					<!-- 備品リスト表示 -->
+					<!-- エラー行は赤背景、正常行は黄背景 -->
 					<tr th:each="item : ${itemDetail}"
 						th:classappend="${errorEquipmentIds != null and errorEquipmentIds.contains(item.equipmentId) ? 'row-error' : 
 					                     (normalEquipmentIds != null and normalEquipmentIds.contains(item.equipmentId) ? 'row-normal' : '')}">
 
+						<!-- シリアルナンバー -->
 						<td class="col-serial">
+							<!-- シリアルナンバー表示 -->
 							<span th:text="${item.parentStockCode}"></span>
+							<!-- シリアルナンバーをhiddenで送信 -->
 							<input type="hidden" th:name="|serialMap[${item.equipmentId}]|"
 								th:value="${item.parentStockCode}">
 						</td>
 
+						<!-- 使用者選択 -->
 						<td class="col-user">
+							<!-- プルダウン選択 -->
 							<select th:name="|staffNoMap[${item.equipmentId}]|">
 								<option value="">選択してください</option>
+								<!-- スタッフ名をループで表示 -->
 								<option th:each="staff : ${staffName}" th:value="${staff.staffNo}"
 									th:text="${staff.name}" th:selected="${prevStaffNoMap != null 
 					                    and prevStaffNoMap[item.equipmentId.toString()] == staff.staffNo.toString()}">
@@ -76,24 +84,30 @@
 							</select>
 						</td>
 
+						<!-- 貸出開始日・返却予定日入力 -->
 						<td class="col-start">
+							<!-- 今日の日付をデフォルト値として設定 -->
 							<input type="date" th:name="|startDateMap[${item.equipmentId}]|" th:value="${prevStartDateMap != null and prevStartDateMap[item.equipmentId.toString()] != null
 					                     ? prevStartDateMap[item.equipmentId.toString()]
 					                     : today}">
 						</td>
 
+						<!-- 返却予定日 -->
 						<td class="col-limit">
+							<!-- デフォルトの返却予定日を設定 -->
 							<input type="date" th:name="|limitDateMap[${item.equipmentId}]|" th:value="${prevLimitDateMap != null and prevLimitDateMap[item.equipmentId.toString()] != null
 					                     ? prevLimitDateMap[item.equipmentId.toString()]
 					                     : defaultLimit}">
 						</td>
-
+						
+                        <!-- 備考 -->
 						<td class="col-remarks">
 							<div class="scroll-inner">
 								<p th:text="${item.remarks}"></p>
 							</div>
 						</td>
 
+						<!-- 貸出チェックボックス -->
 						<td class="col-check">
 							<input type="checkbox" name="equipmentIdList" th:value="${item.equipmentId}" th:checked="${prevEquipmentIdList != null
 					                     and prevEquipmentIdList.contains(item.equipmentId)}">
@@ -107,10 +121,13 @@
 		<h4 class="no-data" th:if="${itemDetail == null or #lists.isEmpty(itemDetail)}">
 			全て貸出中です
 		</h4>
-
+		
+        <!-- テーブル下のボタン -->
 		<div class="table-buttons">
+			<!-- 貸出ボタン（貸出できる備品があるときのみ表示） -->
 			<button class="borrowingButton" type="submit" form="borrowForm"
 				th:if="${itemDetail != null and !#lists.isEmpty(itemDetail)}">貸出</button>
+				<!-- 戻るボタン -->
 			<form th:action="@{/detailBack}" method="get">
 				<input type="hidden" name="name" th:value="${detailName.equipmentName}">
 				<button class="returnToTopButton" type="submit">戻る</button>

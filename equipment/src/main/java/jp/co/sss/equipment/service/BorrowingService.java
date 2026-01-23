@@ -2,13 +2,16 @@ package jp.co.sss.equipment.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jp.co.sss.equipment.dto.BorrowingValidationResult;
 import jp.co.sss.equipment.dto.DetailListViewDto;
 import jp.co.sss.equipment.entity.StaffData;
 import jp.co.sss.equipment.mapper.BorrowingMapper;
@@ -49,55 +52,63 @@ public class BorrowingService {
 	 * @param limitDateMap
 	 * @return
 	 */
-	public List<String> validateBorrowing(
-			List<Integer> equipmentIdList,
-			Map<String, String> serialMap,
-			Map<String, String> staffNoMap,
-			Map<String, String> startDateMap,
-			Map<String, String> limitDateMap) {
+	public BorrowingValidationResult validateBorrowing(
+	        List<Integer> equipmentIdList,
+	        Map<String, String> serialMap,
+	        Map<String, String> staffNoMap,
+	        Map<String, String> startDateMap,
+	        Map<String, String> limitDateMap) {
 
-		List<String> errorMessages = new ArrayList<>();
+	    List<String> errorMessages = new ArrayList<>();
+	    Set<Integer> errorEquipmentIds = new HashSet<>();
+	    Set<Integer> warningEquipmentIds = new HashSet<>();
+	    Set<Integer> normalEquipmentIds = new HashSet<>();
 
-		if (equipmentIdList == null || equipmentIdList.isEmpty()) {
-			errorMessages.add("貸出対象が選択されていません");
-			return errorMessages;
-		}
+	    if (equipmentIdList == null || equipmentIdList.isEmpty()) {
+	        errorMessages.add("　貸出対象が選択されていません");
+	        return new BorrowingValidationResult(errorMessages, errorEquipmentIds, warningEquipmentIds, normalEquipmentIds);
+	    }
 
-		for (Integer id : equipmentIdList) {
-			List<String> rowErrors = new ArrayList<>();
-			// 画面のこの行(id)に対応する入力値を取得するためのキーを作成
-			String serial = serialMap.get("serialMap[" + id + "]"); //シリアル番号取得
-			String staffStr = staffNoMap.get("staffNoMap[" + id + "]");//使用者取得
-			String startStr = startDateMap.get("startDateMap[" + id + "]");//貸出開始日取得
-			String limitStr = limitDateMap.get("limitDateMap[" + id + "]");//返却予定日取得
+	    for (Integer id : equipmentIdList) {
+	        String sId = id.toString(); // キーはString
+	        String serial = serialMap.get(sId);
+	        String staffStr = staffNoMap.get(sId);
+	        String startStr = startDateMap.get(sId);
+	        String limitStr = limitDateMap.get(sId);
 
-			//入力チェック
-			if (staffStr == null || staffStr.isBlank()) {
-				rowErrors.add("使用者未選択");
-			}
-			if (startStr == null || startStr.isBlank()) {
-				rowErrors.add("貸出開始日未入力");
-			}
-			if (limitStr == null || limitStr.isBlank()) {
-				rowErrors.add("返却予定日未入力");
-			}
-			if (!rowErrors.isEmpty()) {
-				errorMessages.add("【シリアル：" + serial + "】");
-				errorMessages.addAll(rowErrors);
-				continue;
-			}
-			
-			LocalDate today = DateUtil.getToday();
-			LocalDate startDate = LocalDate.parse(startStr);
-			LocalDate limitDate = LocalDate.parse(limitStr);
+	        // 未入力チェック
+	        List<String> rowErrors = new ArrayList<>();
+	        if (staffStr == null || staffStr.isBlank()) rowErrors.add("　使用者未選択");
+	        if (startStr == null || startStr.isBlank()) rowErrors.add("　貸出開始日未入力");
+	        if (limitStr == null || limitStr.isBlank()) rowErrors.add("　返却予定日未入力");
 
-			if (limitDate.isBefore(today)) {
-				errorMessages.add("【シリアル：" + serial + "】返却予定日が本日より前です");
-			} else if (limitDate.isBefore(startDate)) {
-				errorMessages.add("【シリアル：" + serial + "】返却予定日が貸出開始日より前です");
-			}
-		}
-		return errorMessages;
+	        if (!rowErrors.isEmpty()) {
+	            errorEquipmentIds.add(id);
+	            errorMessages.add("【シリアル：" + (serial != null ? serial : "不明") + "】");
+	            errorMessages.addAll(rowErrors);
+	            continue;
+	        }
+
+	        // 日付相関チェック
+	        LocalDate today = DateUtil.getToday();
+	        LocalDate startDate = LocalDate.parse(startStr);
+	        LocalDate limitDate = LocalDate.parse(limitStr);
+
+	        if (limitDate.isBefore(today)) {
+	            errorEquipmentIds.add(id);
+	            errorMessages.add("【シリアル：" + serial + "】返却予定日が過去日です");
+	        }
+	        if (limitDate.isBefore(startDate)) {
+	            errorEquipmentIds.add(id);
+	            errorMessages.add("【シリアル：" + serial + "】返却予定日が開始日より前です");
+	        }
+
+	        if (!errorEquipmentIds.contains(id)) {
+	            normalEquipmentIds.add(id);
+	        }
+	    } 
+
+	    return new BorrowingValidationResult(errorMessages, errorEquipmentIds, warningEquipmentIds, normalEquipmentIds);
 	}
 
 	/**
@@ -105,45 +116,40 @@ public class BorrowingService {
 	 */
 	@Transactional
 	public void borrowingEquipment(
-			List<Integer> equipmentIdList, //更新対象の備品id
-			Map<String, String> staffNoMap, //備品idとスタッフ名
-			Map<String, String> startDateMap, //備品idと貸出日
-			Map<String, String> limitDateMap //備品idと返却期限
+	        List<Integer> equipmentIdList,
+	        Map<String, String> staffNoMap,
+	        Map<String, String> startDateMap,
+	        Map<String, String> limitDateMap
 	) {
-		for (Integer id : equipmentIdList) { //チェックされた数だけ１件ずつ処理を行う　
+	    for (Integer id : equipmentIdList) {
+	        // キーは ID そのもの（文字列）になっているはず
+	        String key = id.toString();
 
-			// 画面のこの行(id)に対応する入力値を取得するためのキーを作る
-			String staffKey = "staffNoMap[" + id + "]";
-			String startKey = "startDateMap[" + id + "]";
-			String limitKey = "limitDateMap[" + id + "]";
+	        // 備品IDをキーにしてMapから値を取得
+	        String staffStr = staffNoMap.get(key);
+	        String startStr = startDateMap.get(key);
+	        String limitStr = limitDateMap.get(key);
 
-			// 備品IDに対応する入力値をMapから取得
-			String staffStr = staffNoMap.get(staffKey);
-			String startStr = startDateMap.get(startKey);
-			String limitStr = limitDateMap.get(limitKey);
+	        // 未入力がある場合弾く
+	        if (staffStr == null || staffStr.isBlank()
+	                || startStr == null || startStr.isBlank()
+	                || limitStr == null || limitStr.isBlank()) {
+	            continue;
+	        }
 
-			//未入力がある場合弾く
-			if (staffStr == null || staffStr.isBlank()
-					|| startStr == null || startStr.isBlank()
-					|| limitStr == null || limitStr.isBlank()) {
-				continue;
-			}
+	        LocalDate start = LocalDate.parse(startStr);
+	        LocalDate limit = LocalDate.parse(limitStr);
 
-			//文字列からDate形に型変換
-			LocalDate start = LocalDate.parse(startStr);
-			LocalDate limit = LocalDate.parse(limitStr);
-
-			//貸出日と返却日を比べて返却日が貸出日より前にならないかチェック
-			if (!start.isAfter(limit)) {
-				int updateCount = borrowingMapper.borrowingUpdate(
-						id,
-						Integer.valueOf(staffStr),
-						start,
-						limit);
-				if (updateCount == 0) {
-					throw new IllegalStateException("他のブラウザで更新済み");
-				}
-			}
-		}
+	        if (!start.isAfter(limit)) {
+	            int updateCount = borrowingMapper.borrowingUpdate(
+	                    id,
+	                    Integer.valueOf(staffStr),
+	                    start,
+	                    limit);
+	            if (updateCount == 0) {
+	                throw new IllegalStateException("他のブラウザで更新済み");
+	            }
+	        }
+	    }
 	}
 }
